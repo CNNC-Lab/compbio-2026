@@ -18,7 +18,7 @@ Drive a biophysical circuit model with the SHD spike trains and analyse the *sec
 
 The cochlea gives you a realistic input; the circuit gives you recurrent dynamics the cochlea does not have. The question is what recurrence **adds** to a representation that already carries the signal: does it separate the classes further, hold them longer, or throw information away?
 
-**Tooling.** The encoder/circuit/decoder pattern from the 2025 Project 1 is the template. A balanced random network of leaky integrate-and-fire neurons is the standard cortical caricature. Any of [Brian2](https://brian2.readthedocs.io/), [NEST](https://nest-simulator.org/) or a hand-rolled NumPy/JAX LIF network will do; Brian2 is the easiest to install and fast enough at this scale.
+**Tooling.** The encoder / circuit / decoder pattern is the template: encode the SHD spikes as input currents, drive a recurrent pool, read out from its state. A balanced random network of leaky integrate-and-fire neurons is the standard cortical caricature. Any of [Brian2](https://brian2.readthedocs.io/), [NEST](https://nest-simulator.org/) or a hand-rolled NumPy/JAX LIF network will do; Brian2 is the easiest to install and fast enough at this scale.
 
 **Risk:** medium-high. Simulation parameters are their own research problem, and it is easy to burn a week on a network that produces nothing but silence or saturation. Fix that risk by starting from a network that already works, and changing one thing.
 

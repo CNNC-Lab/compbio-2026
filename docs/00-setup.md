@@ -20,7 +20,7 @@ conda activate compbio-2026
 
 This installs the project itself in editable mode, so `import compbio2026` works from anywhere and your edits to `src/` take effect immediately.
 
-The environment is deliberately small — around fifteen packages. The 2025 course environment carried the whole bioinformatics stack (scanpy, scvi-tools, pysam, samtools, opencv, pytorch) and took a long time to solve; none of it is used here.
+The environment is deliberately small — around fifteen packages — so it solves and installs quickly. Everything in it is used.
 
 If you would rather not use conda:
 
@@ -34,14 +34,10 @@ pip install numpy scipy pandas scikit-learn umap-learn tables h5py matplotlib se
 
 ```python
 from compbio2026 import data
-shd = data.load("train")          # downloads on first call, ~200 MB, then cached in data/
+shd = data.load("train")
 ```
 
-Already have the file from the 2025 repository? Point at it and skip the download:
-
-```python
-shd = data.load(path="~/repos/_education/computational-biology-2025/data/hdspikes/shd_train.h5")
-```
+The first call downloads ~200 MB from <https://zenkelab.org/datasets> and caches it in `data/hdspikes/`. Every later call reads from disk, so you only pay for it once and you can work offline afterwards.
 
 ## 4. Check it works
 
@@ -69,4 +65,4 @@ Nothing else in the project depends on it. If it fails, carry on.
 
 **The download fails or is slow.** The file is hosted at <https://zenkelab.org/datasets>. Download `shd_train.h5.gz` by hand, put it in `data/hdspikes/`, and `data.load()` will find and decompress it.
 
-**Windows.** Everything in this project is pure Python and works on Windows. (The 2025 Project 1 needed NEST, which does not; that constraint no longer applies.)
+**Windows.** Everything in this project is pure Python and works on Windows, including the optional LAUSCHER install.

@@ -113,25 +113,27 @@ def fetch(split: str = "train", cache_dir: str | None = None) -> str:
     cache = os.path.join(cache_dir, "hdspikes")
     os.makedirs(cache, exist_ok=True)
 
+    h5_path = os.path.join(cache, f"shd_{split}.h5")
+    if os.path.isfile(h5_path):
+        return h5_path  # already downloaded; no network needed
+
     with urllib.request.urlopen(f"{BASE_URL}/md5sums.txt") as response:
         lines = response.read().decode("utf-8").split("\n")
     hashes = {p[1]: p[0] for p in (line.split() for line in lines) if len(p) == 2}
 
     name = f"shd_{split}.h5.gz"
     gz_path = _download(f"{BASE_URL}/{name}", os.path.join(cache, name), hashes.get(name))
-    h5_path = gz_path[:-3]
-    if not os.path.isfile(h5_path):
-        print(f"decompressing {gz_path}")
-        with gzip.open(gz_path, "rb") as f_in, open(h5_path, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    print(f"decompressing {gz_path}")
+    with gzip.open(gz_path, "rb") as f_in, open(h5_path, "wb") as f_out:
+        shutil.copyfileobj(f_in, f_out)
     return h5_path
 
 
 def load(split: str = "train", cache_dir: str | None = None, path: str | None = None) -> SHD:
     """Load a split into memory as an :class:`SHD`.
 
-    Pass ``path`` to use a file you already have (for instance the copy in the
-    2025 course repository) instead of downloading.
+    Downloads on first call and caches under ``data/hdspikes/``; subsequent
+    calls are offline. Pass ``path`` only if you keep the file somewhere else.
     """
     h5_path = path or fetch(split, cache_dir)
     with tables.open_file(h5_path, mode="r") as fh:

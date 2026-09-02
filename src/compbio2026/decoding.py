@@ -26,7 +26,9 @@ def make_readout(kind: str = "logistic", C: float = 1.0, alpha: float = 1.0):
         sweep bin widths; use it for exploration and confirm with logistic.
     """
     if kind == "logistic":
-        clf = LogisticRegression(C=C, max_iter=2000, multi_class="multinomial")
+        # multinomial is the default for multiclass in scikit-learn >= 1.5;
+        # the explicit multi_class argument was removed in 1.7.
+        clf = LogisticRegression(C=C, max_iter=2000)
     elif kind == "ridge":
         clf = RidgeClassifier(alpha=alpha)
     else:
