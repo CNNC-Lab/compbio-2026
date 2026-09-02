@@ -1,0 +1,47 @@
+# Environment for the CompBio 2026 neuroscience project.
+#
+# Deliberately lean: this project is laptop-only and needs a fast install on day
+# three of the school. The 2025 course environment carried the whole
+# bioinformatics stack (scanpy, scvi-tools, pysam, samtools, opencv, pytorch);
+# none of it is used here.
+#
+#   conda env create -f environment.yml
+#   conda activate compbio-2026
+name: compbio-2026
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  # core numerics
+  - numpy>=1.26
+  - scipy>=1.12
+  - pandas>=2.2
+  # learning + dimensionality reduction
+  - scikit-learn>=1.4
+  - umap-learn>=0.5
+  # data i/o (SHD ships as HDF5)
+  - pytables>=3.9
+  - h5py>=3.10
+  # plotting
+  - matplotlib>=3.8
+  - seaborn>=0.13
+  # notebooks
+  - jupyterlab>=4.0
+  - ipykernel
+  - ipywidgets
+  - tqdm>=4.66
+  # numba is required by the Lauscher reference implementation
+  - numba>=0.59
+  - pip:
+      # structured sparsity: group lasso with within-group sparsity.
+      # `celer` is the faster solver; `group-lasso` has the friendlier API.
+      # Both are listed so students can compare; neither is large.
+      - group-lasso>=1.5
+      - celer>=0.7
+      # LAUSCHER — the inner-ear model that generated SHD. Needed only if you
+      # want the ground-truth hair-cell layer from source audio (route C, and
+      # validation of compbio2026.lauscher). The estimation path works without it.
+      - git+https://github.com/electronicvisions/lauscher
+      # editable install of this repository's own package
+      - -e .
