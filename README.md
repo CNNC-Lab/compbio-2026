@@ -3,9 +3,9 @@
 **Summer School in Computational Biology 2026 — University of Coimbra**
 
 Renato Duarte · CNC, CiBB, University of Coimbra
-renato.duarte@cnc.uc.pt · (+351) 913 090 735
+renato.duarte@cnc.uc.pt
 
-Up to 4 students (5 at a push) · basic Python, no neuroscience background required · **laptop only** — no cluster, no GPU, no data-access paperwork.
+Seven students · basic Python, no neuroscience background required · **laptop only** — no cluster, no GPU, no data-access paperwork.
 
 ---
 
