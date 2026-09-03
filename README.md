@@ -134,6 +134,7 @@ Trade-offs and risks: **[docs/05-routes.md](docs/05-routes.md)**.
 | [01 · Dataset](docs/01-dataset.md) | What SHD is, where the channels come from, the splits that matter |
 | [02 · Stages](docs/02-stages.md) | What each stage is for, and what doing it well looks like |
 | [03 · Dimensionality reduction](docs/03-dimensionality-reduction.md) | What each method assumes and where it misleads |
+| [07 · Algorithms](docs/07-algorithms.md) | **Catalogue of methods with code and papers**, from PCA to CEBRA |
 | [04 · Hair-cell recovery](docs/04-hair-cell-recovery.md) | The inverse problem, its limits, and how to validate it |
 | [05 · Routes](docs/05-routes.md) | Three ways through the project |
 | [06 · Reading](docs/06-reading.md) | Three starred papers, and the rest on demand |

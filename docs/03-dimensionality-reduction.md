@@ -30,6 +30,10 @@ Two defences, and you should use both:
 2. Add one nonlinear method and compare it to PCA on trustworthiness *and* on decoding accuracy from the embedding.
 3. Only then add more.
 
+## See also
+
+[07-algorithms.md](07-algorithms.md) — the wider catalogue, including latent dynamical models (LFADS, PSID, CEBRA), representation-comparison metrics and topological methods, each with code and a paper.
+
 ## Reading
 
 - Cunningham, J. P. & Yu, B. M. (2014). Dimensionality reduction for large-scale neural recordings. *Nat. Neurosci.* 17:1500–1509.
