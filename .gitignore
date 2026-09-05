@@ -222,3 +222,19 @@ data/hdspikes/
 data/*.csv
 plots/
 !docs/img/
+
+# IDE and AI-assistant configuration
+.idea/
+.vscode/
+CLAUDE.md
+.claude/
+
+# secrets
+.env.*
+!.env.example
+.mcp.json
+.claude/secrets/
+credentials.json
+*.key
+*.pem
+secrets/
