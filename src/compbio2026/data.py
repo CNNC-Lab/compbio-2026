@@ -20,6 +20,24 @@ parameters rather than hidden defaults:
 Neither has a correct value. Report the value you used and show that your result
 survives a sweep over it.
 
+What the raw event list actually is
+-----------------------------------
+Spike times are stored in the HDF5 file as **float16 seconds**. float16 has no
+fixed grid: the spacing between representable values grows with the value, so
+the timing precision degrades through the trial — about 0.008 ms at 10 ms,
+0.06 ms at 100 ms, 0.24 ms at 400 ms and 0.49 ms at 700 ms. That is the storage
+floor, not the resolution of the model that generated the data.
+
+Within one channel the smallest interval measured across 2.2 million intervals
+is **1.22 ms**, the refractory floor of the bushy-cell model. So the binned
+matrix is exactly binary at 1 ms bins, and effectively so at 2 ms; the fraction
+of occupied ``(channel, bin)`` cells holding more than one spike is 0.00 % at
+1 ms, 0.08 % at 2 ms, 1.9 % at 4 ms, 26 % at 10 ms and 57 % at 25 ms. Above a
+few milliseconds you are working with counts, whatever you call them.
+
+Trials run to 1.19 s; truncating at ``t_max_ms=800`` touches 24 % of trials and
+drops 0.15 % of all spikes.
+
 Reference
 ---------
 Cramer, B., Stradmann, Y., Schemmel, J. & Zenke, F. (2020). The Heidelberg
@@ -196,6 +214,53 @@ def build_design_matrix(
 
     t_centres = (np.arange(n_bins) + 0.5) * bin_ms
     return X, shd.labels[idx], t_centres
+
+
+def events(shd: SHD, trial: int, t_max_ms: float | None = None,
+           n_channels: int = N_CHANNELS) -> np.ndarray:
+    """Raw spikes of one trial, as an ``(n_spikes, 2)`` array of ``(unit, time_ms)``.
+
+    This is the data in the form SHD stores it — no binning, no fixed shape, no
+    padding. :func:`build_design_matrix` is the only thing in this package that
+    bins; everything it does is reversible only down to its bin width, so start
+    here whenever the claim is about spike timing.
+
+    The ``[(unit, time), ...]`` list of tuples is one step away, and that is
+    exactly the form ``tools.analysis.signals.spikes.SpikeList`` expects::
+
+        [(int(u), float(t)) for u, t in data.events(shd, 0)]
+
+    Rows are sorted by time. ``time_ms`` is in milliseconds to match
+    ``bin_ms``, ``t_max_ms`` and the ``t`` returned by
+    :func:`build_design_matrix`; the file itself stores seconds.
+    """
+    t = np.asarray(shd.times[trial], dtype=np.float64) * 1e3
+    u = np.asarray(shd.units[trial], dtype=np.int64)
+    keep = u < n_channels
+    if t_max_ms is not None:
+        keep &= t < t_max_ms
+    t, u = t[keep], u[keep]
+    order = np.argsort(t, kind="stable")
+    return np.stack([u[order].astype(np.float64), t[order]], axis=1)
+
+
+def binarize(X: np.ndarray, verbose: bool = True) -> np.ndarray:
+    """Clip a count matrix to ``{0, 1}`` and say what that cost.
+
+    Whether this is lossless is a property of the bin width, not of the data.
+    The bushy-cell model has a ~1.2 ms refractory floor, so at ``bin_ms <= 1``
+    nothing is lost and the result is the spike train itself; by 10 ms a quarter
+    of the occupied cells hold two or more spikes and clipping is throwing away
+    real rate differences. The printed number is the check.
+    """
+    occupied = X > 0
+    n_occ = int(occupied.sum())
+    lost = float(X.sum() - occupied.sum())
+    if verbose and n_occ:
+        multi = int((X > 1).sum())
+        print(f"binarize: {multi}/{n_occ} occupied cells held >1 spike "
+              f"({100 * multi / n_occ:.2f} %); {lost:.0f} of {X.sum():.0f} spikes discarded")
+    return occupied.astype(X.dtype)
 
 
 def flatten(X: np.ndarray) -> np.ndarray:

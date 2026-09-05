@@ -42,6 +42,36 @@ X, y, t = data.build_design_matrix(shd, bin_ms=10.0, t_max_ms=800.0, smooth_ms=0
 
 `SHD` keeps the data in event form — a ragged list of spike times and channel indices per trial. `build_design_matrix` bins it onto a common time base, which is what every downstream analysis wants.
 
+## The event list, and how much timing is in it
+
+`build_design_matrix` is the only thing in this package that bins. If you want the spikes themselves — for a raster, for a spike-train metric, or to drive a simulation — take them from the event list instead:
+
+```python
+ev = data.events(shd, trial=0, t_max_ms=800.0)   # (n_spikes, 2) array of (unit, time_ms)
+[(int(u), float(t)) for u, t in ev]               # the [(unit, time), ...] list of tuples
+
+from tools.analysis.signals.spikes import SpikeList
+sl = SpikeList([(int(u), float(t)) for u, t in ev], list(range(700)))
+```
+
+That tuple form is exactly what `SpikeList` in `tools/` expects, so the 2025 course's spike-train analysis carries over unchanged.
+
+**Storage resolution.** Spike times live in the HDF5 file as **float16 seconds**. float16 has no fixed grid — the gap between representable values grows with the value — so timing precision degrades through the trial: about 0.008 ms at *t* = 10 ms, 0.06 ms at 100 ms, 0.24 ms at 400 ms and 0.49 ms at 700 ms. That is a property of how the dataset was written, not of the model that generated it, and it is the floor under any claim about millisecond timing late in a trial.
+
+**When the binned matrix is binary.** The smallest interval between two spikes in the same channel, measured over 2.2 million intervals in the training split, is **1.22 ms** — the refractory floor of the bushy-cell model. So:
+
+| `bin_ms` | occupied `(channel, bin)` cells holding >1 spike |
+|---|---|
+| 1 | 0.00 % |
+| 2 | 0.08 % |
+| 4 | 1.9 % |
+| 10 | 26 % |
+| 25 | 57 % |
+
+At 1 ms the design matrix *is* the spike train written as a binary array. By 10 ms it is a count matrix and calling it a raster is wrong. `data.binarize(X)` clips to `{0, 1}` and prints what the clipping cost, so you can check rather than assume.
+
+**What the standard loaders do.** Zenke's `sparse_data_generator_from_hdf5_spikes` in the [spytorch](https://github.com/fzenke/spytorch) tutorials uses `time_bins = np.linspace(0, 1.4, num=100)` — 14.1 ms bins — and builds a sparse tensor of ones, which coalesces by *summing* duplicates. It is a count tensor that is almost universally treated as binary. [tonic](https://tonic.readthedocs.io/) hands you the events and makes you choose the bin in a `ToFrame` transform. No loader gives you a binary matrix; you choose the bin width that makes it one.
+
 ## The two choices that are not defaults
 
 **`bin_ms` — how much spike timing you keep.** Cramer et al. showed classifiers with no access to spike timing plateau near **60 %** accuracy, while temporally aware ones reach **~85 %**. Your bin width places you somewhere on that axis. It is a scientific decision and it belongs in your report.
