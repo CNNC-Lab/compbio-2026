@@ -63,7 +63,6 @@ def filter_spikes(X: np.ndarray, kind: str = "exponential", tau_ms: float = 20.0
     """
     k = kernel(kind, tau_ms, dt_ms)
     n_pad = len(k) - 1
-    out = np.empty_like(X, dtype=np.float32)
     flat = X.reshape(-1, X.shape[-1])
     res = np.empty_like(flat, dtype=np.float32)
     for i, row in enumerate(flat):
