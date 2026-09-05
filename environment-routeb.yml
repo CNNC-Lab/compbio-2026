@@ -7,7 +7,7 @@
 #   conda env create -f environment-routeb.yml
 #   conda activate compbio-2026-routeb
 #
-# CPU only. Everything in notebooks 07 and 08 trains in seconds to minutes on a
+# CPU only. Everything in notebooks 08 to 10 runs in seconds to minutes on a
 # laptop; a GPU buys you bigger networks, not a different experience.
 name: compbio-2026-routeb
 channels:

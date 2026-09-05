@@ -29,7 +29,7 @@ Cost, measured on a laptop CPU: a few seconds to build a 700-to-24 network, and
 one to two seconds per trial of 700 ms at ``dt = 0.1 ms`` — so a 160-trial
 dataset takes about five minutes. Gradients through the simulation cost roughly
 ten times that and need ``checkpoint_lengths``, which is the whole reason
-notebook 07 offers a reduced pipeline for training.
+notebook 08 offers a reduced pipeline for training.
 
 JAXley is imported lazily, so importing :mod:`compbio2026` in the analysis
 environment does not require the Route B stack.
