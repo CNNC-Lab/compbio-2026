@@ -24,6 +24,7 @@ survives. It is the same decision as bin width, made continuously.
 from __future__ import annotations
 
 import numpy as np
+from scipy.signal import lfilter
 
 
 def kernel(kind: str = "exponential", tau_ms: float = 20.0, dt_ms: float = 1.0,
@@ -69,6 +70,27 @@ def filter_spikes(X: np.ndarray, kind: str = "exponential", tau_ms: float = 20.0
         c = np.convolve(row, k, mode="full")
         res[i] = c[: X.shape[-1]] if kind != "gaussian" else c[n_pad // 2 : n_pad // 2 + X.shape[-1]]
     return res.reshape(X.shape)
+
+
+def exponential_state(X: np.ndarray, tau_ms: float = 20.0, dt_ms: float = 1.0) -> np.ndarray:
+    """The exponential filter in its recursive form: ``s[n] = a s[n-1] + (1-a) x[n]``.
+
+    Same kernel as ``filter_spikes(..., "exponential")`` up to the tail beyond
+    ``5 * tau`` that the explicit kernel truncates, but computed as a state
+    variable updated once per timestep rather than as a convolution after the
+    fact. Two reasons to prefer it:
+
+    * It is what a synapse does. There is no buffer of past spikes anywhere in
+      a circuit; there is a conductance that decays and gets kicked.
+    * It costs ``O(n_samples)`` instead of ``O(n_samples * kernel_length)``.
+      At ``dt = 0.1 ms`` a 100 ms time constant is a 5000-tap kernel, and the
+      convolution becomes the slowest step in the whole pipeline.
+
+    Filters along the last axis, so it takes the same ``(trials, channels,
+    samples)`` arrays as everything else here.
+    """
+    a = np.exp(-dt_ms / tau_ms)
+    return lfilter([1.0 - a], [1.0, -a], np.asarray(X, dtype=np.float64), axis=-1).astype(np.float32)
 
 
 def pool_channels(X: np.ndarray, n_bands: int, reduce: str = "mean") -> np.ndarray:

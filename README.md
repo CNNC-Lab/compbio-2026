@@ -59,7 +59,7 @@ Full instructions, including what to do when something breaks: **[docs/00-setup.
 
 ## The notebooks
 
-Eight, in order. Every one is executed in this repository, so you can read the outputs before running anything. The first five need only `environment.yml`; **6 is the bridge to route B**, and **7 and 8 need `environment-routeb.yml`** because they simulate.
+Nine, in order. Every one is executed in this repository, so you can read the outputs before running anything. The first five need only `environment.yml`; **6 is the bridge to route B**, and **7 to 9 need `environment-routeb.yml`** because they simulate.
 
 | | Notebook | What you get out of it |
 |---|---|---|
@@ -71,6 +71,7 @@ Eight, in order. Every one is executed in this repository, so you can read the o
 | **6** | [Filtering and readout](notebooks/06_filtering_and_readout.ipynb) | Spikes to continuous signals; what binning costs; pooling versus selecting channels |
 | **7** | [Driving an HH layer](notebooks/07_jaxley_hh_layer.ipynb) | Spikes into conductance-based synapses — and the reduced pipeline that makes training affordable |
 | **8** | [The full spiking model](notebooks/08_full_spiking_model.ipynb) | Route B's actual question: is the simulated layer worth more than the layer you were given? |
+| **9** | [A state matrix](notebooks/09_state_matrix.ipynb) | One population vector per presentation, an AdEx layer, and why a single state vector is a rate code |
 
 ### 1–2 · Structure
 
@@ -146,7 +147,7 @@ Trade-offs and risks: **[docs/05-routes.md](docs/05-routes.md)**.
 
 ```
 src/compbio2026/     data · geometry · decoding · selection · filters · lauscher · spiking · plotting
-notebooks/           eight executed notebooks (1-5 analysis, 6-8 route B)
+notebooks/           nine executed notebooks (1-5 analysis, 6-9 route B)
 docs/                setup, dataset, stages, methods, recovery, routes, reading
 tools/               SpikeList / StateMatrix, carried over from the 2025 course
 data/                downloaded dataset (gitignored)

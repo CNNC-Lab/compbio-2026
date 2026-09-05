@@ -137,8 +137,26 @@ def random_connectivity(
 # The network
 # --------------------------------------------------------------------------
 
+#: Conductance densities that give an :class:`~jaxley.channels.AdEx` cell a
+#: ~20 ms membrane time constant on the 10 x 10 um compartment used here.
+#:
+#: JAXley's AdEx defaults are written for a much smaller compartment: ``g_L``
+#: of 10 S/cm² against a capacitance of 1 uF/cm² gives ``tau_m = C/g_L`` of
+#: 0.1 microseconds, so the cell integrates nothing and never fires however
+#: hard you drive it. ``g_L = 5e-5`` puts ``tau_m`` at 20 ms; ``a`` keeps the
+#: published ratio ``a/g_L = 0.2``. Pass these as ``channel_params``.
+ADEX_PARAMS = {
+    "AdEx_g_L": 5e-5,     # S/cm², tau_m = C/g_L = 20 ms
+    "AdEx_a": 1e-5,       # subthreshold adaptation
+    "AdEx_b": 0.0,        # spike-triggered adaptation; raise for spike-frequency adaptation
+    "AdEx_tau_w": 100.0,  # ms
+}
+
+
 def build_layer(
     connectivity: np.ndarray,
+    channel=None,
+    channel_params: dict | None = None,
     tau_syn_ms: float = 5.0,
     e_syn_mV: float = 0.0,
     v_th_mV: float = -35.0,
@@ -146,12 +164,23 @@ def build_layer(
     radius_um: float = 10.0,
     length_um: float = 10.0,
 ):
-    """A clamped input population wired to a Hodgkin–Huxley population.
+    """A clamped input population wired to a spiking population.
 
     Returns the :class:`jaxley.Network`. Cells ``0 .. n_in-1`` are the input
     compartments (voltage-clamped, :class:`~jaxley.channels.Leak` only); cells
-    ``n_in .. n_in+n_out-1`` carry :class:`~jaxley.channels.HH` at its JAXley
-    defaults and are the ones recorded.
+    ``n_in .. n_in+n_out-1`` carry the downstream channel and are the ones
+    recorded.
+
+    ``channel``
+        Channel inserted into the downstream population; defaults to
+        :class:`~jaxley.channels.HH`. :class:`~jaxley.channels.AdEx` gives an
+        adaptive exponential integrate-and-fire cell that simulates about
+        fifteen times faster, at the cost of gradients that are zero after
+        every spike — fine for running the model, useless for training through
+        it. With AdEx, pass ``channel_params=ADEX_PARAMS`` and detect spikes
+        with a threshold below its 0 mV cap, for instance ``-20.0``.
+    ``channel_params``
+        Parameters applied with ``net.set`` after insertion.
 
     ``delta_mV`` is the steepness of the presynaptic sigmoid that gates
     transmitter release. The JAXley default of 10 mV leaves a synapse ~3 % open
@@ -170,6 +199,8 @@ def build_layer(
     from jaxley.connect import connectivity_matrix_connect
     from jaxley.synapses import IonotropicSynapse
 
+    channel = channel if channel is not None else HH()
+
     n_in, n_out = connectivity.shape
     comp = jx.Compartment()
     branch = jx.Branch(comp, ncomp=1)
@@ -181,7 +212,7 @@ def build_layer(
     pre = net.cell(list(range(n_in)))
     post = net.cell(list(range(n_in, n_in + n_out)))
     pre.insert(Leak())
-    post.insert(HH())
+    post.insert(channel)
     connectivity_matrix_connect(pre, post, IonotropicSynapse(), connectivity)
 
     net.set("radius", radius_um)
@@ -190,6 +221,8 @@ def build_layer(
     net.set("IonotropicSynapse_e_syn", e_syn_mV)
     net.set("IonotropicSynapse_v_th", v_th_mV)
     net.set("IonotropicSynapse_delta", delta_mV)
+    for key, value in (channel_params or {}).items():
+        net.set(key, value)
     post.record("v", verbose=False)
     return net
 
@@ -249,6 +282,10 @@ def detect_spikes(v: np.ndarray, threshold: float = 0.0) -> np.ndarray:
     Crossings rather than "voltage is high", so one action potential counts once
     however long it stays depolarised. The returned array has one fewer sample
     along time than ``v``.
+
+    The default suits Hodgkin–Huxley, whose spikes overshoot 0 mV. AdEx never
+    does: it caps the membrane at ``v_threshold`` (0 mV) and resets, so pass
+    something below that cap and above ``v_T``, for instance ``-20.0``.
     """
     v = np.asarray(v)
     return (v[..., 1:] > threshold) & (v[..., :-1] <= threshold)
